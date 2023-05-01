@@ -9,3 +9,5 @@ And select command:
 " 1 - List all VMs"
 " 2 - Clone VM"
 " 3 - Get VM config"
+
+Tested on vmware esxi 6.5.
