@@ -116,3 +116,47 @@ case "$command" in
 	default_datastore_name=$(vim-cmd vmsvc/get.filelayout $vmid | grep vmPathName | cut -d ']' -f1 | cut -d '[' -f2)
 	default_datastore_path=$(vim-cmd hostsvc/datastore/summary $default_datastore_name | grep url | cut -d '"' -f2)
 	vmx_filename=$(grep "$vmdkfile" $default_datastore_path/$vmxpath | cut -d '=' -f1)
+	
+	
+  if [[ "$vmstate" == "Powered on" ]]; then
+   echo 'Virtual machine is in "'$vmstate'" state.'
+   read -p "Turn off this VM?[yes|y/no|n]: " powerstate
+	if [[ "$powerstate" == "yes" || "$powerstate" == "y" ]]; then
+		vim-cmd vmsvc/power.off $vmid
+		sleep 10
+		log_poweroff
+		clone_procedure
+		log_poweron	id=$(vim-cmd solo/registervm $new_path/$new_vm.vmx | awk '{print $NF}')
+		echo "New VM ID: $id"
+		vim-cmd vmsvc/power.on $id
+		sleep 10
+		log_poweron
+		
+		
+	else
+		echo "VM is not turning off"
+	fi
+   elif [[ "$vmstate" == "Powered off" ]]; then
+	clone_procedure
+	id=$(vim-cmd solo/registervm $new_path/$new_vm.vmx | awk '{print $NF}')
+	echo "New VM ID: $id"
+	vim-cmd vmsvc/power.on $id
+	sleep 10
+	log_poweron
+	
+	else
+	echo 'Wrong VM state "'$vmstate'"'
+	fi
+  ;;
+  3)
+  echo "============Chosen get VM config=============="
+  vim-cmd vmsvc/getallvms
+  read -p "Enter VM ID: " vmid
+  vim-cmd vmsvc/get.config $vmid
+  ;;
+  *)
+  echo "Unknown command: $command"
+  echo 'Please enter: "help" to list all available commands'
+  ;;
+
+esac
